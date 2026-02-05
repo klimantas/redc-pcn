@@ -2,7 +2,10 @@ import numpy as np
 import os
 from lib.utils.log_utils import args_to_string
 from lib.utils.sr_utils import sr_families
-import wandb
+try:
+    import wandb
+except ImportError:
+    print("wandb is not installed. Skipping wandb import.")
 
 def extract_results_molecular_datasets(args, results, result_folder):
     # Extract results

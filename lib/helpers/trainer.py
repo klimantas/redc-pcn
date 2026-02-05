@@ -10,7 +10,11 @@ from lib.helpers.model_helpers import compute_params
 from tqdm import tqdm
 import logging
 import os
-import wandb
+try: 
+    import wandb
+except ImportError:
+    wandb = None
+    logging.warning("wandb is not installed. Skipping wandb import.")
 
 from lib.data.complex import ComplexBatch
 
@@ -185,7 +189,7 @@ class Trainer(object):
                     log_dict = self.log_curves(log_dict, 'Performance', perf_curves, suffix, is_best = True)
                     if (not self.args.debug):
                         save_checkpoint(get_checkpoint_state(self.model, self.optimizer, epoch), self.best_epoch_pt)
-                if (not self.args.debug):
+                if (not self.args.debug) and wandb is not None:
                     wandb.log(log_dict)
         else:
             train_curve.append(np.nan)
@@ -232,7 +236,7 @@ class Trainer(object):
         }
         
         # dump results.txt
-        if (not self.args.debug):
+        if (not self.args.debug) and wandb is not None:
             with open(self.filename, 'w') as handle:
                 handle.write(msg)
             wandb.save(self.filename)

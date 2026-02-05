@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 from sklearn import metrics as met
-from ogb.graphproppred import Evaluator as OGBEvaluator
+# from ogb.graphproppred import Evaluator as OGBEvaluator
 
 class Evaluator(object):
     

@@ -23,7 +23,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
-from torch_geometric.nn.conv.utils.inspector import Inspector
+from torch_geometric.inspector import Inspector
 from collections import OrderedDict
 from typing import Dict, Any, Callable
 import inspect

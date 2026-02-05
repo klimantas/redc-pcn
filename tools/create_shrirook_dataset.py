@@ -3,10 +3,9 @@ from pathlib import Path
 import random
 import networkx as nx
 import torch
+from torch.utils.data import random_split
 from torch_geometric.data import Data
 from torch_geometric.utils import to_undirected
-
-rng = random.Random(42)
 
 def create_rooks_graph(n):
     """
@@ -78,7 +77,7 @@ def create_shrikhande_graph():
     
     return G
 
-def permute_graph(G, rng):
+def permute_graph(G, rng=random.Random(42)):
     """
     Return a permuted copy of the input graph G.
 
@@ -111,7 +110,7 @@ def nx_to_pyg(G, y):
 
     return Data(x=x, edge_index=edge_index, y=y, num_nodes=n)
 
-def create_pyg_dataset(n_samples=100, rng=rng):
+def create_pyg_dataset(n_samples=100, rng=random.Random(42)):
     graphs = []
     rook = create_rooks_graph(4)
     shr = create_shrikhande_graph()
@@ -124,13 +123,37 @@ def create_pyg_dataset(n_samples=100, rng=rng):
     return graphs
 
 if __name__ == "__main__":
-    dataset = create_pyg_dataset(n_samples=100, rng=rng)
+    # 1) Generate graphs (PyG Data objects)
+    rng = random.Random(42)
+    dataset = create_pyg_dataset(n_samples=100, rng=rng)  # total graphs = 2*n_samples
 
-    PROJECT_ROOT = Path(__file__).resolve().parents[1]   # adjust if your script is deeper/shallower
+    # 2) Deterministic PyTorch split (indices only)
+    n = len(dataset)
+    gen = torch.Generator().manual_seed(42)
+
+    train_len = int(0.8 * n)
+    val_len   = int(0.1 * n)
+    test_len  = n - train_len - val_len
+
+    train_subset, val_subset, test_subset = random_split(
+        range(n), [train_len, val_len, test_len], generator=gen
+    )
+
+    train_ids = list(train_subset)
+    val_ids   = list(val_subset)
+    test_ids  = list(test_subset)
+
+    # 3) Save in the dict format your loader expects
+    PROJECT_ROOT = Path(__file__).resolve().parents[1]
     out_dir = PROJECT_ROOT / "datasets" / "SHRIROOK" / "raw"
     out_dir.mkdir(parents=True, exist_ok=True)
 
     out_path = out_dir / "data.pt"
-    print(f"Saving dataset to {out_path}")
+    obj = {
+        "graphs": dataset,
+        "splits": {"train": train_ids, "valid": val_ids, "test": test_ids},
+    }
 
-    torch.save(dataset, out_path)
+    torch.save(obj, out_path)
+    print(f"Saved {n} graphs to {out_path}")
+    print(f"Split sizes: train={len(train_ids)} val={len(val_ids)} test={len(test_ids)}")

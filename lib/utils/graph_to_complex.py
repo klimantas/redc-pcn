@@ -4,8 +4,10 @@ import sys, os
 ROOT_DIR = os.path.dirname(os.path.abspath(os.path.join('..', '..', 'utils')))
 sys.path.append(ROOT_DIR)
 
+
 import graph_tool as gt
 import graph_tool.topology as top
+
 import numpy as np
 import torch
 import gudhi as gd
@@ -394,7 +396,7 @@ def convert_graph_dataset_with_gudhi(dataset, expansion_dim: int, include_down_a
 def get_rings(edge_index, max_k=7):
     if isinstance(edge_index, torch.Tensor):
         edge_index = edge_index.numpy()
-
+    
     edge_list = edge_index.T
     graph_gt = gt.Graph(directed=False)
     graph_gt.add_edge_list(edge_list)

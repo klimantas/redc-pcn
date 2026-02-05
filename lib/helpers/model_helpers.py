@@ -1,4 +1,4 @@
-from models.complex_models.molecular_models import EmbedSparseCIN, OGBEmbedSparseCIN
+# from models.complex_models.molecular_models import EmbedSparseCIN, OGBEmbedSparseCIN
 from models.complex_models.tu_models import SparseCIN
 from models.graph_models.gin_models import GIN0
 from lib.utils.log_utils import str_arg_to_bool_list

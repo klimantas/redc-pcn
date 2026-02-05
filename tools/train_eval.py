@@ -18,8 +18,11 @@ from tools.parser import get_parser, validate_args
 from lib.helpers.model_helpers import get_complex_model, get_graph_model
 from lib.utils.sr_utils import sr_families
 
-import wandb
-
+try:
+    import wandb
+except ImportError:
+    wandb = None
+    print("wandb is not installed. Skipping wandb import.")
 
 def main(args):
     """The common training and evaluation script used by all the experiments."""
@@ -44,7 +47,7 @@ def main(args):
         assert args.dataset == "SR-GRAPHS"                                      # we will set each individual dataset later
         torch.set_default_dtype(torch.float64)
 
-    if not args.debug:
+    if not args.debug and wandb is not None:
         # Init MLOps
         wandb.init(
             project="PCN",
@@ -73,7 +76,7 @@ def main(args):
     elif (args.dataset == 'SR-GRAPHS'):
         extract_results_sr_datasets(args, results, result_folder)
     
-    if not args.debug:
+    if not args.debug and wandb is not None:
         # End Wandb
         wandb.finish()
 

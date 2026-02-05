@@ -23,11 +23,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 import os
+from xmlrpc.client import FastUnmarshaller
+from lib.datasets.shrirook import SHRIROOKDataset
 import torch
 from torch.utils.data.dataloader import default_collate
 from torch_geometric.data import Data, Batch
 import collections.abc as container_abcs
-from torch._six import string_classes
 from definitions import ROOT_DIR
 
 from lib.data.cochain import Cochain, CochainBatch
@@ -35,11 +36,13 @@ from lib.data.complex import Complex, ComplexBatch
 from lib.data.datasets import ComplexDataset
 from lib.utils.random_seed import my_worker_init_fn
 from lib.datasets.zinc import ZincDataset, load_zinc_graph_dataset
-from lib.datasets.ogb import OGBDataset, load_ogb_graph_dataset
+# from lib.datasets.ogb import OGBDataset, load_ogb_graph_dataset
 from lib.datasets.tu import TUDataset, load_tu_graph_dataset
 from lib.datasets.sr import SRDataset, load_sr_graph_dataset
+from lib.datasets.shrirook import SHRIROOKDataset
 from torch_geometric.loader import DataLoader as PyGDataLoader
 int_classes = int
+string_classes = (str,)
 
 class Collater(object):
     """Object that converts python lists of objects into the appropiate storage format.
@@ -130,6 +133,8 @@ def load_dataset(name, root=os.path.join(ROOT_DIR, 'datasets'), **kwargs) -> Com
         dataset = TUDataset(os.path.join(root, name), name, degree_as_tag=False, **kwargs)
     elif name.startswith('sr'):
         dataset = SRDataset(os.path.join(root, 'SR-GRAPHS'), name, **kwargs)
+    elif name == 'SHRIROOK':
+        dataset = SHRIROOKDataset(os.path.join(root, name), **kwargs)
     else:
         raise NotImplementedError(name)
     return dataset
@@ -161,6 +166,16 @@ def load_graph_dataset(name, root=os.path.join(ROOT_DIR, 'datasets'), **kwargs):
         graph_list, train_ids, val_ids, test_ids = load_sr_graph_dataset(name, root=os.path.join(root, 'SR-GRAPHS'))
         num_classes = 32
         num_features = 1
+    elif name == "SHRIROOK":
+        obj = torch.load(os.path.join(root, "SHRIROOK", "raw", "data.pt"), weights_only=False)
+        graph_list = obj["graphs"]
+        splits = obj["splits"]
+        train_ids = splits["train"]
+        val_ids = splits["valid"]
+        test_ids = splits["test"]
+        num_classes = 2
+        num_features = 1
+        num_node_labels = None
     else:
         raise NotImplementedError
     

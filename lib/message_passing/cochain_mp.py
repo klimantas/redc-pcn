@@ -33,9 +33,15 @@ from torch import Tensor
 from torch_sparse import SparseTensor
 from torch_scatter import gather_csr, scatter, segment_csr
 
-from torch_geometric.nn.conv.utils.helpers import expand_left
+# from torch_geometric.nn.conv.utils.helpers import expand_left
 from lib.helpers.message_passing_helpers import ComplexInspector
 
+def expand_left(tensor, dim, dims):
+    # Mimics old PyG helper: reshape by adding singleton dims on the left
+    # so that 'tensor' can broadcast against a target of dimensionality `dims`.
+    for _ in range(dims - dim):
+        tensor = tensor.unsqueeze(0)
+    return tensor
 
 class CochainMessagePassing(torch.nn.Module):
     """The base class for building message passing models on cochain complexes.
