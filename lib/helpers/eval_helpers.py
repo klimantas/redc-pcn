@@ -5,6 +5,7 @@ from lib.utils.sr_utils import sr_families
 try:
     import wandb
 except ImportError:
+    wandb = None
     print("wandb is not installed. Skipping wandb import.")
 
 def extract_results_molecular_datasets(args, results, result_folder):
@@ -67,18 +68,20 @@ def extract_results_molecular_datasets(args, results, result_folder):
     
 
     if (not args.debug):
-        wandb.log({
-            'Mean Train Performance': mean_train_perf,
-            'Mean Val Performance': mean_val_perf,
-            'Mean Test Performance': mean_test_perf
-        })
+        if wandb is not None:
+            wandb.log({
+                'Mean Train Performance': mean_train_perf,
+                'Mean Val Performance': mean_val_perf,
+                'Mean Test Performance': mean_test_perf
+            })
         # additionally write msg and configuration on file
         msg += args_to_string(args)
         filename = os.path.join(result_folder, "results.txt")
         print('Writing results at: {}'.format(filename))
         with open(filename, 'w') as handle:
             handle.write(msg)
-        wandb.save(filename)
+        if wandb is not None:
+            wandb.save(filename)
     
 def extract_results_tu_datasets(args, results, result_folder):
     # aggregate results
@@ -117,9 +120,10 @@ def extract_results_tu_datasets(args, results, result_folder):
     print(msg)
 
     if not args.debug:
-        wandb.log({
-            'Accuracy': mean_perf
-        })
+        if wandb is not None:
+            wandb.log({
+                'Accuracy': mean_perf
+            })
         
         # additionally write msg and configuration on file
         msg += args_to_string(args)
@@ -127,7 +131,8 @@ def extract_results_tu_datasets(args, results, result_folder):
         print('Writing results at: {}'.format(filename))
         with open(filename, 'w') as handle:
             handle.write(msg)
-        wandb.save(filename)
+        if wandb is not None:
+            wandb.save(filename)
 
 def extract_results_sr_datasets(args, results, result_folder):
     families = sr_families()
@@ -158,7 +163,39 @@ def extract_results_sr_datasets(args, results, result_folder):
         print('Writing results at: {}'.format(filename))
         with open(filename, 'w') as handle:
             handle.write(msg)
-        wandb.save(filename)
+        if wandb is not None:
+            wandb.save(filename)
+
+def extract_results_shrirook_dataset(args, results, result_folder):
+    """Extract results for SHRIROOK dataset."""
+    test_perfs = [curve['last_test'] for curve in results]
+    assert len(test_perfs) == args.stop_seed + 1 - args.start_seed
+    mean = np.mean(test_perfs)
+    std = np.std(test_perfs, ddof=1)
+    std_err = std / np.sqrt(len(test_perfs))
+    minim = np.min(test_perfs)
+    maxim = np.max(test_perfs)
+    
+    msg = (
+        f"===== Final result ======\n"
+        f'Dataset:                SHRIROOK\n'
+        f'Mean test performance:  {mean:.4f}\n'
+        f'Std test performance:   {std:.4f}\n'
+        f'StdErr test performance: {std_err:.4f}\n'
+        f'Min test performance:   {minim:.4f}\n'
+        f'Max test performance:   {maxim:.4f}\n'
+        '=========================\n')
+    print(msg)
+
+    if not args.debug:
+        # additionally write msg and configuration on file
+        msg += args_to_string(args)
+        filename = os.path.join(result_folder, 'result.txt')
+        print('Writing results at: {}'.format(filename))
+        with open(filename, 'w') as handle:
+            handle.write(msg)
+        if wandb is not None:
+            wandb.save(filename)
 
 def print_summary(summary):
     msg = ''

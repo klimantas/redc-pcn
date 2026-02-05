@@ -183,7 +183,7 @@ class InMemoryComplexDataset(ComplexDataset):
             assert targets[start] is None
             s = start
 
-        target = targets[s]
+        target = targets[tuple(s)] if isinstance(s, list) else targets[s]
         
         dim = self.data['dims'][idx].item()
         assert dim == len(cochains) - 1
@@ -226,7 +226,7 @@ class InMemoryComplexDataset(ComplexDataset):
                     s = slices[start]
                 else:
                     s = slice(start, end)
-                data[key] = item[s]
+                data[key] = item[tuple(s)] if isinstance(s, list) else item[s]
         empty = (data.num_cells is None)
 
         return data, empty

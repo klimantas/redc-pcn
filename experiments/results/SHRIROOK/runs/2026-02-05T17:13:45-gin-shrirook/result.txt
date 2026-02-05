@@ -1,0 +1,61 @@
+===== Final result ======
+Dataset:                SHRIROOK
+Mean test performance:  0.5950
+Std test performance:   0.3013
+StdErr test performance: 0.0953
+Min test performance:   0.0000
+Max test performance:   1.0000
+=========================
+Arguments:
+--seed 43 \
+--start_seed 0 \
+--stop_seed 9 \
+--device 0 \
+--model 'gin' \
+--use_coboundaries 'False' \
+--use_boundaries 'False' \
+--indrop_rate 0.0 \
+--drop_rate 0.0 \
+--drop_position 'lin2' \
+--nonlinearity 'relu' \
+--readout 'sum' \
+--final_readout 'sum' \
+--readout_dims None \
+--jump_mode None \
+--graph_norm 'bn' \
+--disable_graph_norm 'False' \
+--lr 0.001 \
+--lr_scheduler 'StepLR' \
+--lr_scheduler_decay_steps 50 \
+--lr_scheduler_decay_rate 0.5 \
+--lr_scheduler_patience 10 \
+--lr_scheduler_min 1e-05 \
+--num_layers 6 \
+--emb_dim 16 \
+--batch_size 32 \
+--epochs 100 \
+--num_workers 8 \
+--dataset 'SHRIROOK' \
+--task_type 'classification' \
+--eval_metric 'accuracy' \
+--iso_eps 0.01 \
+--complex_type None \
+--max_dim 2 \
+--max_ring_size None \
+--result_folder '/home/klimanta/redc-pcn/experiments/results' \
+--exp_name 'gin-shrirook' \
+--folds None \
+--init_method 'sum' \
+--train_eval_period 10 \
+--flow_points 400 \
+--flow_classes 3 \
+--train_orient 'default' \
+--test_orient 'default' \
+--preproc_jobs 2 \
+--weights_dir None \
+--num_layers_update 2 \
+--num_layers_combine 1 \
+--num_fc_layers 2 \
+--conv_type 'B' \
+--note None \
+--sha '062d57e' \

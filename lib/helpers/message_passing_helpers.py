@@ -34,6 +34,9 @@ class ComplexInspector(Inspector):
     Wrapper of the PyTorch Geometric Inspector so to adapt it to our use cases.
     Used in Cochain Message Passing
     """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.params = {}
 
     def __implements__(self, cls, func_name: str) -> bool:
         if cls.__name__ == 'CochainMessagePassing':
@@ -48,3 +51,42 @@ class ComplexInspector(Inspector):
         for _ in range(pop_first_n):
             params.popitem(last=False)
         self.params[func.__name__] = params
+    
+    def keys(self, func_names: list) -> set:
+        """
+        Returns a set of all parameter names from the specified functions.
+        
+        Args:
+            func_names: List of function names to collect parameters from
+            
+        Returns:
+            A set of all parameter names across the specified functions
+        """
+        keys = set()
+        for func_name in func_names:
+            if func_name in self.params:
+                keys.update(self.params[func_name].keys())
+        return keys
+    
+    def distribute(self, func_name: str, kwargs: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Filters kwargs to only include parameters needed by the specified function.
+        
+        Args:
+            func_name: Name of the function to distribute kwargs for
+            kwargs: Dictionary of all available keyword arguments
+            
+        Returns:
+            A dictionary containing only the kwargs that the function accepts
+        """
+        if func_name not in self.params:
+            return {}
+        
+        func_params = self.params[func_name]
+        distributed = {}
+        
+        for key in func_params.keys():
+            if key in kwargs:
+                distributed[key] = kwargs[key]
+        
+        return distributed

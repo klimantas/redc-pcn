@@ -7,6 +7,7 @@ sys.path.append(ROOT_DIR)
 
 import graph_tool as gt
 import graph_tool.topology as top
+from graph_tool.generation import remove_self_loops, remove_parallel_edges
 
 import numpy as np
 import torch
@@ -400,8 +401,8 @@ def get_rings(edge_index, max_k=7):
     edge_list = edge_index.T
     graph_gt = gt.Graph(directed=False)
     graph_gt.add_edge_list(edge_list)
-    gt.stats.remove_self_loops(graph_gt)
-    gt.stats.remove_parallel_edges(graph_gt)
+    remove_self_loops(graph_gt)
+    remove_parallel_edges(graph_gt)
     # We represent rings with their original node ordering
     # so that we can easily read out the boundaries
     # The use of the `sorted_rings` set allows to discard
@@ -663,8 +664,8 @@ def get_paths(edge_index, max_k = 3):
     edge_list = edge_index.T
     graph_gt = gt.Graph(directed=False)
     graph_gt.add_edge_list(edge_list)
-    gt.stats.remove_self_loops(graph_gt)
-    gt.stats.remove_parallel_edges(graph_gt)
+    remove_self_loops(graph_gt)
+    remove_parallel_edges(graph_gt)
 
     paths = set()
     complex_dim = 0

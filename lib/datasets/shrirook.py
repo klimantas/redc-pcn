@@ -18,7 +18,13 @@ class SHRIROOKDataset(InMemoryComplexDataset):
                          include_down_adj=include_down_adj,
                          complex_type=complex_type, init_method=init_method)
 
-        self.data, self.slices = torch.load(self.processed_paths[0])
+        self.data, self.slices = torch.load(self.processed_paths[0], weights_only=False)
+        raw_obj = torch.load(os.path.join(self.raw_dir, "data.pt"), weights_only=False)
+        splits = raw_obj["splits"]
+        self.train_ids = [int(i) for i in splits["train"]]
+        self.val_ids   = [int(i) for i in splits["valid"]]
+        self.test_ids  = [int(i) for i in splits["test"]]
+
 
     @property
     def processed_file_names(self):
@@ -31,7 +37,7 @@ class SHRIROOKDataset(InMemoryComplexDataset):
     def download(self): pass
 
     def process(self):
-        obj = torch.load(os.path.join(self.root, "raw", "data.pt"))
+        obj = torch.load(os.path.join(self.root, "raw", "data.pt"), weights_only=False)
         graphs = obj["graphs"]
 
         if self._complex_type == "path":

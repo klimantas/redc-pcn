@@ -13,7 +13,7 @@ from lib.helpers.data_helpers import get_dataloaders
 from lib.helpers.lr_scheduler import get_lr_scheduler
 from lib.utils.random_seed import set_random_seed
 from lib.helpers.trainer import Trainer
-from lib.helpers.eval_helpers import extract_results_molecular_datasets, extract_results_tu_datasets, extract_results_sr_datasets
+from lib.helpers.eval_helpers import extract_results_molecular_datasets, extract_results_tu_datasets, extract_results_sr_datasets, extract_results_shrirook_dataset
 from tools.parser import get_parser, validate_args
 from lib.helpers.model_helpers import get_complex_model, get_graph_model
 from lib.utils.sr_utils import sr_families
@@ -60,7 +60,7 @@ def main(args):
         results = train_with_different_sr_families(args, result_folder, device)
         args.dataset = "SR-GRAPHS"
     else:
-        if args.folds is None:  # ZINC and OGBG datasets
+        if args.folds is None:  # ZINC and OGBG datasets, and SHRIROOK
             results = train_with_different_seeds(args, result_folder, device)
         else:                   # when fold is present (TU dataset and CSL)
             results = train_with_different_folds(args, result_folder, device)
@@ -73,8 +73,10 @@ def main(args):
     elif (args.dataset in ['IMDBBINARY', 'IMDBMULTI', 'REDDITBINARY', 'REDDITMULTI5K', 'PROTEINS', 
                             'NCI1', 'NCI109', 'PTC', 'MUTAG']):
         extract_results_tu_datasets(args, results, result_folder)
-    elif (args.dataset == 'SR-GRAPHS'):
+    elif args.dataset == 'SR-GRAPHS':
         extract_results_sr_datasets(args, results, result_folder)
+    elif args.dataset == 'SHRIROOK':
+        extract_results_shrirook_dataset(args, results, result_folder)
     
     if not args.debug and wandb is not None:
         # End Wandb
