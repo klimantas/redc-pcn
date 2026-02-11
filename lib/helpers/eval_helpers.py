@@ -1,8 +1,11 @@
-import numpy as np
 import os
-from lib.utils.log_utils import args_to_string
-from lib.utils.sr_utils import sr_families
+
+import numpy as np
+
 import wandb
+from lib.utils.log_utils import args_to_string
+from lib.utils.sr_utils import rnd_families, sr_families
+
 
 def extract_results_molecular_datasets(args, results, result_folder):
     # Extract results
@@ -128,10 +131,12 @@ def extract_results_tu_datasets(args, results, result_folder):
 
 def extract_results_sr_datasets(args, results, result_folder):
     families = sr_families()
+    print(f"Processing results for {len(families)} SR graph families...")
     msg = (
         f"===== Final result ======\n"
         f'Datasets:\tSR-GRAPHS\n')
     for i, f in enumerate(families):
+        print(f"Processing family {i+1}/{len(families)}: {f}")
         curves = results[i]
         test_perfs = [curve['last_test'] for curve in curves]
         assert len(test_perfs) == args.stop_seed + 1 - args.start_seed
@@ -153,9 +158,59 @@ def extract_results_sr_datasets(args, results, result_folder):
         msg += args_to_string(args)
         filename = os.path.join(result_folder, 'result.txt')
         print('Writing results at: {}'.format(filename))
-        with open(filename, 'w') as handle:
-            handle.write(msg)
-        wandb.save(filename)
+        try:
+            os.makedirs(os.path.dirname(filename), exist_ok=True)
+            with open(filename, 'w') as handle:
+                handle.write(msg)
+            wandb.save(filename)
+            print(f"Results successfully written to {filename}")
+        except Exception as e:
+            print(f"ERROR writing results: {e}")
+
+def extract_results_rnd_datasets(args, results, result_folder):
+    families = rnd_families()
+    if not families:
+        print("WARNING: No random graph families found!")
+        return
+    
+    print(f"Processing results for {len(families)} random graph families...")
+    msg = (
+        f"===== Final result ======\n"
+        f'Datasets:\tRANDOM-GRAPHS\n')
+    for i, f in enumerate(families):
+        print(f"Processing family {i+1}/{len(families)}: {f}")
+        curves = results[i]
+        print(f"  Number of seeds: {len(curves)}")
+        test_perfs = [curve['last_test'] for curve in curves]
+        print(f"  Test performances: {test_perfs}")
+        assert len(test_perfs) == args.stop_seed + 1 - args.start_seed, f"Expected {args.stop_seed + 1 - args.start_seed} but got {len(test_perfs)}"
+        mean = np.mean(test_perfs)
+        std_err = np.std(test_perfs) / float(len(test_perfs))
+        minim = np.min(test_perfs)
+        maxim = np.max(test_perfs)
+        msg += (
+            f'------------------ {f} ------------------\n'
+            f'Mean failure rate:     {mean}\n'
+            f'StdErr failure rate:   {std_err}\n'
+            f'Min failure rate:      {minim}\n'
+            f'Max failure rate:      {maxim}\n'
+            '-----------------------------------------------\n')
+    print(msg)
+
+    if not args.debug:
+        # additionally write msg and configuration on file
+        msg += args_to_string(args)
+        filename = os.path.join(result_folder, 'result.txt')
+        print('Writing results at: {}'.format(filename))
+        try:
+            os.makedirs(os.path.dirname(filename), exist_ok=True)
+            with open(filename, 'w') as handle:
+                handle.write(msg)
+            wandb.save(filename)
+            print(f"Results successfully written to {filename}")
+        except Exception as e:
+            print(f"ERROR writing results: {e}")
+
 
 def print_summary(summary):
     msg = ''

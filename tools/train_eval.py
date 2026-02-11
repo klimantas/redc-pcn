@@ -1,24 +1,29 @@
-import os
-import sys
-import subprocess
 import copy
+import datetime
+import os
+import subprocess
+import sys
+
 import torch
 import torch.optim as optim
-import datetime
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 sys.path.append(ROOT_DIR)
 
-from lib.helpers.data_helpers import get_dataloaders
-from lib.helpers.lr_scheduler import get_lr_scheduler
-from lib.utils.random_seed import set_random_seed
-from lib.helpers.trainer import Trainer
-from lib.helpers.eval_helpers import extract_results_molecular_datasets, extract_results_tu_datasets, extract_results_sr_datasets
-from tools.parser import get_parser, validate_args
-from lib.helpers.model_helpers import get_complex_model, get_graph_model
-from lib.utils.sr_utils import sr_families
-
 import wandb
+from lib.helpers.data_helpers import get_dataloaders
+from lib.helpers.eval_helpers import (
+    extract_results_molecular_datasets,
+    extract_results_rnd_datasets,
+    extract_results_sr_datasets,
+    extract_results_tu_datasets,
+)
+from lib.helpers.lr_scheduler import get_lr_scheduler
+from lib.helpers.model_helpers import get_complex_model, get_graph_model
+from lib.helpers.trainer import Trainer
+from lib.utils.random_seed import set_random_seed
+from lib.utils.sr_utils import rnd_families, sr_families
+from tools.parser import get_parser, validate_args
 
 
 def main(args):
@@ -39,9 +44,9 @@ def main(args):
     else:
         result_folder = os.path.join(args.result_folder, args.dataset, 'sweeps', f'{time_stamp}-{args.exp_name}')
 
-    # Set double precision for SR experiments
+    # Set double precision for SR and RG experiments
     if args.task_type == 'isomorphism':
-        assert args.dataset == "SR-GRAPHS"                                      # we will set each individual dataset later
+        assert args.dataset in ["SR-GRAPHS", "RANDOM-GRAPHS"]                 # we will set each individual dataset later
         torch.set_default_dtype(torch.float64)
 
     if not args.debug:
@@ -53,9 +58,13 @@ def main(args):
 
         wandb.run.name = f'{time_stamp}-{args.exp_name}'
 
-    if args.task_type == 'isomorphism':         # SR-GRAPHS
-        results = train_with_different_sr_families(args, result_folder, device)
-        args.dataset = "SR-GRAPHS"
+    if args.task_type == 'isomorphism':         # SR-GRAPHS or RANDOM-GRAPHS
+        original_dataset = args.dataset  # Save original dataset name
+        if args.dataset == "SR-GRAPHS":
+            results = train_with_different_sr_families(args, result_folder, device)
+        elif args.dataset == "RANDOM-GRAPHS":
+            results = train_with_different_rnd_families(args, result_folder, device)
+        args.dataset = original_dataset  # Restore for result extraction
     else:
         if args.folds is None:  # ZINC and OGBG datasets
             results = train_with_different_seeds(args, result_folder, device)
@@ -72,6 +81,8 @@ def main(args):
         extract_results_tu_datasets(args, results, result_folder)
     elif (args.dataset == 'SR-GRAPHS'):
         extract_results_sr_datasets(args, results, result_folder)
+    elif (args.dataset == 'RANDOM-GRAPHS'):
+        extract_results_rnd_datasets(args, results, result_folder)
     
     if not args.debug:
         # End Wandb
@@ -135,6 +146,21 @@ def train_with_different_sr_families(args, result_folder, device):
         print(f"Family {f}")
         args.dataset = f
         results = train_with_different_seeds(args, os.path.join(result_folder, 'SR-GRAPHS', args.dataset), device)
+        all_results.append(results)
+    return all_results
+
+
+def train_with_different_rnd_families(args, result_folder, device):
+    all_results = []
+    families = rnd_families()
+    if not families:
+        raise ValueError("No random graph families found. Please generate RANDOM-GRAPHS dataset first using datasets/random_graphs.py")
+    for f in families:
+        results = []
+        print("==========================================================")
+        print(f"Family {f}")
+        args.dataset = f
+        results = train_with_different_seeds(args, os.path.join(result_folder, 'RANDOM-GRAPHS', args.dataset), device)
         all_results.append(results)
     return all_results
         

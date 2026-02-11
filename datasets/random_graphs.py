@@ -13,12 +13,14 @@ Usage:
 """
 
 import argparse
-import os
-import numpy as np
-import networkx as nx
-from pathlib import Path
-from scipy.stats import truncnorm
 import datetime
+import os
+from pathlib import Path
+
+import networkx as nx
+import numpy as np
+from scipy.stats import truncnorm
+
 
 def get_truncated_normal(mean=0.5, sd=0.15, low=0.1, upp=0.9):
     """
@@ -116,7 +118,7 @@ def generate_graph_family(num_nodes, num_graphs, base_seed=None,
         # Print progress
         print(f"  Graph {i+1}/{num_graphs}: Generated")
     
-    return graphs
+    return set(graphs)
 
 
 def save_family_to_g6(graphs, output_path):

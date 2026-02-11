@@ -1,18 +1,22 @@
-import torch
-import numpy as np
-
-from lib.helpers.criterion import get_criterion
-from lib.helpers.evaluator import Evaluator
-from lib.helpers.save_helpers import get_checkpoint_state, save_checkpoint, load_checkpoint
-from lib.utils.log_utils import args_to_string
-from lib.helpers.model_helpers import compute_params
-
-from tqdm import tqdm
 import logging
 import os
-import wandb
 
+import numpy as np
+import torch
+from tqdm import tqdm
+
+import wandb
 from lib.data.complex import ComplexBatch
+from lib.helpers.criterion import get_criterion
+from lib.helpers.evaluator import Evaluator
+from lib.helpers.model_helpers import compute_params
+from lib.helpers.save_helpers import (
+    get_checkpoint_state,
+    load_checkpoint,
+    save_checkpoint,
+)
+from lib.utils.log_utils import args_to_string
+
 
 class Trainer(object):
     def __init__(self, model, args, train_loader, valid_loader, test_loader, optimizer, scheduler, result_folder, train_seed, fold, device):
@@ -196,7 +200,7 @@ class Trainer(object):
         final_train_perf = np.nan
         final_val_perf = np.nan
         final_test_perf = np.nan
-        if not self.args.dataset.startswith('sr'):
+        if not (self.args.dataset.startswith('sr') or self.args.dataset.startswith('rnd')):
             final_train_perf, _ = self.eval(self.train_loader)
             final_val_perf, _ = self.eval( self.valid_loader)
         if self.test_loader is not None:
@@ -252,9 +256,16 @@ class Trainer(object):
             
             # Cast features to double precision if that is used
             if torch.get_default_dtype() == torch.float64:
-                for dim in range(batch.dimension + 1):
-                    batch.cochains[dim].x = batch.cochains[dim].x.double()
-                    assert batch.cochains[dim].x.dtype == torch.float64, batch.cochains[dim].x.dtype
+                # Check if this is a complex batch (has dimension attribute) or regular PyG batch
+                if hasattr(batch, 'dimension'):
+                    # Complex batch for PCN models
+                    for dim in range(batch.dimension + 1):
+                        batch.cochains[dim].x = batch.cochains[dim].x.double()
+                        assert batch.cochains[dim].x.dtype == torch.float64, batch.cochains[dim].x.dtype
+                else:
+                    # Regular PyG batch for GIN models
+                    batch.x = batch.x.double()
+                    assert batch.x.dtype == torch.float64, batch.x.dtype
 
             batch = batch.to(self.device)
             with torch.no_grad():

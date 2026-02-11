@@ -2,5 +2,5 @@ __pycache__/
 wandb/
 experiments/results/
 
-# Don't add new datasets
+# Don't auto-add datasets
 datasets/

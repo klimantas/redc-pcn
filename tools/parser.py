@@ -1,6 +1,6 @@
+import argparse
 import os
 import time
-import argparse
 
 from definitions import ROOT_DIR
 
@@ -154,15 +154,17 @@ def validate_args(args):
         else:
             assert args.task_type == 'bin_classification'
             assert not args.minimize
-    elif args.dataset.startswith('sr'):
-        assert args.model in ['sparse_cin', 'mp_agnostic']
+    elif args.dataset.startswith('sr') or args.dataset.startswith('rnd'):
+        assert args.model in ['sparse_cin', 'mp_agnostic', 'gin', 'gin0']
         assert args.eval_metric == 'isomorphism'
         assert args.task_type == 'isomorphism'
-        assert args.jump_mode is None
+        if args.model in ['sparse_cin', 'mp_agnostic']:
+            # Complex model specific assertions
+            assert args.jump_mode is None
+            assert args.final_readout == 'sum'
         assert args.drop_rate == 0.0
         assert args.untrained
         assert args.nonlinearity == 'elu'
         assert args.readout == 'sum'
-        assert args.final_readout == 'sum'
         assert not args.simple_features
 
