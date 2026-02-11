@@ -1,0 +1,6 @@
+__pycache__/
+wandb/
+experiments/results/
+
+# Don't add new datasets
+datasets/
